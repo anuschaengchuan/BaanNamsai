@@ -3,435 +3,823 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="manifest" href="manifest.json">
+<title>Baan Nam Sai</title>
 <link rel="icon" type="image/png" href="icon.png">
-<meta name="theme-color" content="#f2f2f2">
 <link rel="apple-touch-icon" href="icon.png">
-<!-- Fonts similar to logo (heading + UI) -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-body { font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background:#f2f2f2; margin:0; padding:8px; }
-.app { max-width:360px; margin:0 auto; }
+* { box-sizing: border-box; }
+body {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  background: #f2f2f2; margin: 0; padding: 8px;
+}
+.app { max-width: 400px; margin: 0 auto; }
 
-/* HEADER */
+/* ── Header ── */
 .header {
-  display:flex; justify-content:space-between; align-items:center;
-  background:#fff; padding:12px; border-radius:10px;
-  margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08);
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fff; padding: 12px; border-radius: 10px;
+  margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.logo { height:70px; }
-
-.right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
-
-.lang-switch { cursor:pointer; font-size:13px; display:flex; gap:6px; align-items:center; }
-.flag { width:22px; height:16px; display:inline-block; object-fit:cover; border-radius:3px; }
-
-.actions { display:flex; gap:8px; align-items:center; }
-
-.avatar { width:32px; height:32px; border-radius:50%; }
-
+.logo { height: 70px; }
+.actions { display: flex; gap: 8px; align-items: center; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: none; }
 .btn {
-  padding:6px 14px; font-size:13px;
-  border-radius:6px; border:1px solid #bbb;
-  background:#fff; cursor:pointer;
-  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  padding: 6px 14px; font-size: 13px; border-radius: 6px;
+  border: 1px solid #bbb; background: #fff; cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
 }
-.btn.edit-on { background:#ffecb3; border-color:#ff9800; }
 
-/* CARDS */
+/* ── Section titles ── */
+.section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #999;
+  margin: 16px 0 6px 4px;
+}
+
+/* ── Cards ── */
 .card {
-  background:#fff; border-radius:8px; padding:8px;
-  margin-bottom:8px; border:2px solid transparent;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
+  background: #fff; border-radius: 10px; padding: 12px;
+  margin-bottom: 10px; border: 2px solid #e8e8e8;
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
 }
-.card { --card-bg: #fff; }
-.card.free { background:#e8f5e9; border-color:#4caf50; --status-flash: rgba(76,175,80,0.16); --card-bg:#e8f5e9; }
-.card.assigned { border-color:#e53935; --status-flash: rgba(229,57,53,0.16); --card-bg:#fff; }
-.card.unavailable { background:#eee; border-color:#9e9e9e; --status-flash: rgba(158,158,158,0.12); --card-bg:#eee; }
+.card-title { font-weight: 700; font-size: 15px; }
 
-.name { font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight:700; margin-bottom:6px; font-size:16px; }
-.name { font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight:700; margin-bottom:4px; font-size:16px; }
-
-.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-.plate-right { font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight:800; color:#222; font-size:16px; }
-
-.meta { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-.meta > div { min-width:110px; }
-.meta-entry { background:transparent; padding:4px 6px 1px 6px; border-radius:6px; min-width:110px; border-left:3px solid rgba(0,0,0,0.04); display:flex; flex-direction:column; position:relative; overflow:hidden; }
-.meta-label { font-size:11px; color:#666; line-height:1; }
-.meta-value { font-weight:700; color:#222; margin-top:1px; font-size:13px; line-height:1; }
-
-/* overlay to hide underlying box during flash */
-.meta-entry::before { content:""; position:absolute; inset:0; background:transparent; z-index:0; pointer-events:none; }
-.meta-entry .meta-label, .meta-entry .meta-value { position:relative; z-index:1; }
-.meta-entry.warn::before, .meta-entry.expired::before { animation: flash-red 1.2s infinite; }
-.meta-edit { display:flex; gap:12px; flex-direction:column; }
-
-.row { display:flex; gap:8px; align-items:center; }
-img.bike { width:110px; max-width:40%; height:auto; flex-shrink:0; object-fit:contain; margin-right:14px; }
-
-.info { font-size:12px; color:#555; line-height:1.3; }
-.info div { margin-bottom:4px; }
-
-.status-btn {
-  margin-top:6px;
-  min-height:36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  border-radius:6px;
-  border:1px solid #999;
-  cursor:pointer;
+/* ── House maintenance list ── */
+.maint-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; border-radius: 7px; margin-top: 6px;
+  background: #f8f8f8; border-left: 3px solid #e0e0e0;
 }
+.maint-item.ok   { border-color: #4caf50; }
+.maint-item.warn { border-color: #ff9800; }
+.maint-item.red  { border-color: #e53935; }
+.maint-item-label { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.maint-item-value { font-size: 13px; font-weight: 700; }
 
-.status-menu {
-  margin-top:4px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  overflow:hidden;
+/* ── Inventory ── */
+.inv-list { margin-top: 7px; }
+.inv-item {
+  display: flex; align-items: center; gap: 4px; padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0; font-size: 13px;
 }
-.status-menu div {
-  padding:6px;
-  cursor:pointer;
+.inv-item:last-child { border-bottom: none; }
+.inv-item span { min-width: 0; }
+.inv-item .inv-name { flex: 1; white-space: nowrap; }
+.del-btn { color: #ccc; cursor: pointer; padding: 0 4px; font-size: 15px; line-height: 1; }
+.del-btn:hover { color: #e53935; }
+.entry-btn { color: #999; cursor: pointer; padding: 0 2px; font-size: 11px; font-weight: 700; line-height: 1; text-transform: uppercase; flex: 0 0 auto; }
+.entry-btn:hover { color: #222; }
+
+/* ── Bike card status styles ── */
+.card.free       { background: #e8f5e9; border-color: #4caf50; }
+.card.assigned   { border-color: #e53935; }
+.card.unavailable{ background: #eee;     border-color: #9e9e9e; }
+
+.bike-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.bike-name   { font-weight: 700; font-size: 15px; }
+.plate       { font-weight: 800; font-size: 14px; color: #333; }
+
+.bike-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.maint-item.red { animation: pulse 1.4s infinite; }
+
+/* Modal option list */
+.modal-option {
+  padding: 11px 12px; border-radius: 7px; cursor: pointer;
+  font-size: 14px; font-weight: 600; margin-bottom: 4px;
+  background: #f8f8f8;
 }
-.status-menu div:hover { background:#eee; }
+.modal-option:hover { background: #eee; }
+.modal-option.selected { background: #222; color: #fff; }
 
-.updated { font-size:11px; color:#777; margin-top:4px; }
+/* Clickable hint for admin */
+.tappable { cursor: pointer; }
+.tappable:active { opacity: .7; }
 
-input.date { width:100%; font-size:11px; padding:2px; }
-
-
-.warn { color:#ff9800; }
-.expired { color:#e53935; font-weight:600; }
-
-@keyframes flash {
-  0%{opacity:1} 50%{opacity:.3} 100%{opacity:1}
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
 }
-
-@keyframes flash-red {
-  0%{background:transparent; box-shadow:none}
-  50%{background:linear-gradient(90deg, rgba(229,57,53,0.16) 0%, var(--card-bg, #fff) 85%); box-shadow:0 0 8px rgba(0,0,0,0.04)}
-  100%{background:transparent; box-shadow:none}
+.modal-box {
+  background: #fff; border-radius: 14px; padding: 20px 18px;
+  width: 88%; max-width: 340px; box-shadow: 0 6px 24px rgba(0,0,0,.18);
 }
+.modal-title { font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+.modal-input {
+  width: 100%; padding: 10px 11px; border: 1px solid #ddd; border-radius: 8px;
+  font-size: 14px; font-family: 'Montserrat', sans-serif;
+  margin-bottom: 8px; box-sizing: border-box;
+}
+.modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+.modal-btns button {
+  flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-family: 'Montserrat', sans-serif; font-weight: 700;
+}
+.modal-btns .save-btn   { background: #222; color: #fff; }
+.modal-btns .cancel-btn { background: #eee; color: #555; }
+
+/* Service history */
+.svc-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid #eee; margin-top: 8px; padding-top: 7px;
+  font-size: 12px; color: #777; cursor: pointer;
+}
+.svc-bar:hover { color: #333; }
+.svc-list { margin-top: 6px; }
+.svc-entry {
+  display: flex; align-items: baseline; padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0; font-size: 12px; gap: 6px;
+}
+.svc-entry:last-child { border-bottom: none; }
+.svc-note { flex: 1; color: #333; }
+.svc-date { color: #aaa; font-size: 11px; white-space: nowrap; }
+
+.updated { font-size: 11px; color: #aaa; margin-top: 5px; }
+
 </style>
 </head>
 
 <body>
-
 <div class="app">
 
+<!-- HEADER -->
 <div class="header">
   <img src="Logo.png" class="logo">
-
-  <div class="right">
-    <div class="lang-switch" onclick="toggleLang()">
-      <span id="langLabel"></span>
-      <img id="langFlag" class="flag" alt="lang">
-    </div>
-
-    <div class="actions">
-      <img id="avatar" class="avatar">
-      <button id="loginBtn" class="btn" onclick="signIn()"></button>
-      <button id="logoutBtn" class="btn" onclick="signOut()"></button>
-      <button id="editBtn" class="btn" onclick="toggleEdit()">Edit</button>
-    </div>
+  <div class="actions">
+    <img id="avatar" class="avatar">
+    <button id="loginBtn"  class="btn" onclick="signIn()">Login</button>
+    <button id="logoutBtn" class="btn" style="display:none" onclick="signOut()">Logout</button>
   </div>
 </div>
 
+<div class="section-title">Houses</div>
+<div id="houses"></div>
+
+<div class="section-title">Motorcycles</div>
 <div id="bikes"></div>
 
-</div>
+</div><!-- .app -->
+
+<div id="modal" class="modal-overlay" style="display:none" onclick="closeModal()"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE ================= */
+/* ═══════════════════════════════════════════
+   FIREBASE
+═══════════════════════════════════════════ */
 firebase.initializeApp({
-  apiKey:"AIzaSyCqJ-LqV_hn06MhfweOTJGIDmIt5bIq2JI",
-  authDomain:"baan-namsai-bikes.firebaseapp.com",
-  projectId:"baan-namsai-bikes"
+  apiKey: "AIzaSyCqJ-LqV_hn06MhfweOTJGIDmIt5bIq2JI",
+  authDomain: "baan-namsai-bikes.firebaseapp.com",
+  projectId: "baan-namsai-bikes"
 });
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 const ADMIN_UID = "pK46rxDcvEVZEyktMvc8g2FaCoH2";
+db.enablePersistence().catch(() => {});
 
-// Enable offline persistence (works with spotty WiFi)
-db.enablePersistence().catch(err => {
-  if (err.code === 'failed-precondition') {
-    console.log('Multiple tabs open, persistence only works in one tab');
-  } else if (err.code === 'unimplemented') {
-    console.log('Browser does not support offline mode');
-  }
-});
-
-/* ================= DATA with CACHE ================= */
-const bikes = [
-  {id:1,name:"Honda Click",img:"click_redblack.png",plate:"1กต 8316"},
-  {id:2,name:"Yamaha Fazzio",img:"fazzio_darkgrey.png",plate:"1กร 5287"},
-  {id:3,name:"Yamaha Fazzio",img:"fazzio_lightblue.png",plate:"1กพ 2670"}
+/* ═══════════════════════════════════════════
+   STATIC DATA
+═══════════════════════════════════════════ */
+const HOUSES = [
+  { id: "baan-mai",     en: "Baan Mai",      aircons: 3 },
+  { id: "baan-nam-lom", en: "Baan Nam Lom",  aircons: 1 },
+  { id: "baan-mai-pai", en: "Baan Mai Pai",  aircons: 1 },
+  { id: "baan-makham",  en: "Baan Makham",   aircons: 2 }
 ];
 
-// Load cached bike data (prevents flashing on reload)
-function getCachedBikeData() {
-  try {
-    const cached = localStorage.getItem("bikeDataCache");
-    return cached ? JSON.parse(cached) : null;
-  } catch {
-    return null;
-  }
-}
+const BIKES = [
+  { id: 1, name: "Honda Click",   img: "click_redblack.png",   plate: "1กต 8316", color: "#7B1C2E" },
+  { id: 2, name: "Yamaha Fazzio", img: "fazzio_darkgrey.png",  plate: "1กร 5287", color: "#4A4A4A" },
+  { id: 3, name: "Yamaha Fazzio", img: "fazzio_lightblue.png", plate: "1กพ 2670", color: "#7BBFDA" }
+];
 
-let bikeData = getCachedBikeData() || {
-  1:{status:"Free"},
-  2:{status:"Free"},
-  3:{status:"Free"}
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let isAdmin      = false;
+let _pendingSave = null;
+let _openInvModal = null;
+let _openSvcModal = null;
+let _editingInvItemId = null;
+let _editingSvcEntryId = null;
+
+let houseData = {};
+let bikeData  = {};
+try { houseData = JSON.parse(localStorage.getItem("houseCache") || "{}"); } catch {}
+try { bikeData  = JSON.parse(localStorage.getItem("bikeCache")  || "{}"); } catch {}
+
+/* ═══════════════════════════════════════════
+   STRINGS
+═══════════════════════════════════════════ */
+const L = {
+  aircon:"Aircon", fireAlarm:"Fire Alarm Battery", inv:"Inventory",
+  tax:"Tax", ins:"Insurance", svc:"Last Service",
+  free:"Available", unavail:"Unavailable",
+  expired:"Expired", days:"days", months:"months",
+  never:"Never recorded", ago:"ago",
+  viewSvc:"Service history", hideSvc:"Hide history",
+  noSvc:"No service logged yet", logSvc:"+ Log Service",
+  today:"Today", save:"Save", cancel:"Cancel",
+  addItem:"Add item…", by:"by", min:"min ago", hour:"h ago", day:"d ago"
 };
+const t = k => L[k] ?? k;
 
-let editMode = false;
-let openStatusMenu = null;
-
-/* ================= LANGUAGE ================= */
-let lang = localStorage.getItem("lang") || "en";
-
-const T = {
-  en:{available:"Available",unavailable:"Unavailable",tax:"Tax",insurance:"Insurance",
-      plate:"Plate",expired:"Expired",days:"days",months:"months",
-      login:"Login",logout:"Logout",by:"by",min:"min ago",hour:"h ago",day:"d ago",
-      houses:{ "Baan Mai":"Baan Mai","Baan Nam Lom":"Baan Nam Lom","Baan Mai Pai":"Baan Mai Pai","Baan Makham":"Baan Makham" }},
-  th:{available:"ว่าง",unavailable:"ไม่พร้อมใช้งาน",tax:"ภาษี",insurance:"ประกัน",
-      plate:"ทะเบียน",expired:"หมดอายุ",days:"วัน",months:"เดือน",
-      login:"เข้าสู่ระบบ",logout:"ออกจากระบบ",by:"โดย",min:"นาทีที่แล้ว",hour:"ชั่วโมงที่แล้ว",day:"วันที่แล้ว",
-      houses:{ "Baan Mai":"บ้านไม้","Baan Nam Lom":"บ้านลมและน้ำ","Baan Mai Pai":"บ้านไม้ไผ่","Baan Makham":"บ้านมะขาม" }}
-};
-
-/* ================= HELPERS ================= */
-function parseDate(str){
-  if(!str||!/^\d{2}\/\d{2}\/\d{2}$/.test(str)) return null;
-  const [d,m,y]=str.split("/").map(Number);
-  return new Date(2000+y,m-1,d);
+/* ═══════════════════════════════════════════
+   DATE HELPERS
+═══════════════════════════════════════════ */
+function todayStr() {
+  const d = new Date();
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}`;
 }
-function daysLeft(str){
-  const d=parseDate(str);
-  if(!d) return null;
-  return Math.ceil((d-new Date())/86400000);
+function pad(n) { return String(n).padStart(2, '0'); }
+function parseDate(s) {
+  if (!s || !/^\d{2}\/\d{2}\/\d{2}$/.test(s)) return null;
+  const [d,m,y] = s.split('/').map(Number);
+  return new Date(2000+y, m-1, d);
 }
-function remaining(days){
-  if(days===null) return "—";
-  if(days<0) return T[lang].expired;
-  if(days<=60) return days+" "+T[lang].days;
-  return Math.round(days/30)+" "+T[lang].months;
+function daysLeft(s)  { const d=parseDate(s); return d ? Math.ceil((d-new Date())/86400000) : null; }
+function daysSince(s) { const d=parseDate(s); return d ? Math.floor((new Date()-d)/86400000) : null; }
+function remaining(n) {
+  if (n===null) return '—';
+  if (n<0) return t('expired');
+  if (n<=60) return n+' '+t('days');
+  return Math.round(n/30)+' '+t('months');
 }
-function timeAgo(ts){
-  const s=Math.floor((Date.now()-ts)/1000);
-  if(s<3600) return Math.floor(s/60)+" "+T[lang].min;
-  if(s<86400) return Math.floor(s/3600)+" "+T[lang].hour;
-  return Math.floor(s/86400)+" "+T[lang].day;
+function sinceStr(s) {
+  const d = daysSince(s);
+  if (d===null) return t('never');
+  if (d===0) return 'Today';
+  if (d<=60)  return d+' '+t('days')+' '+t('ago');
+  return Math.round(d/30)+' '+t('months')+' '+t('ago');
+}
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<3600)  return Math.floor(s/60)+' '+t('min');
+  if (s<86400) return Math.floor(s/3600)+' '+t('hour');
+  return Math.floor(s/86400)+' '+t('day');
+}
+function uid() { return Math.random().toString(36).slice(2,10); }
+// Convert DD/MM/YY  →  YYYY-MM-DD  (for <input type="date">)
+function toInputDate(s) {
+  if (!s || !/^\d{2}\/\d{2}\/\d{2}$/.test(s)) return '';
+  const [d,m,y] = s.split('/');
+  return `20${y}-${m}-${d}`;
+}
+// Convert YYYY-MM-DD  →  DD/MM/YY
+function fromInputDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${String(y).slice(-2)}`;
 }
 
-/* ================= RENDER ================= */
-const bikesEl=document.getElementById("bikes");
-
-function renderAll(){
-  bikesEl.innerHTML=bikes.map(b=>renderBike(b)).join("");
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function maintCls(days, warnAt, redAt) {
+  if (days===null || days>=redAt) return 'red';
+  if (days>=warnAt)               return 'warn';
+  return 'ok';
 }
 
-function renderBike(b){
-  const d=bikeData[b.id]||{status:"Free"};
-  const taxDays=daysLeft(d.taxExpiry);
-  const insDays=daysLeft(d.insuranceExpiry);
+/* ═══════════════════════════════════════════
+   RENDER — HOUSES
+═══════════════════════════════════════════ */
+function renderHouses() {
+  document.getElementById('houses').innerHTML = HOUSES.map(renderHouse).join('');
+}
 
-  function line(label,days){
-    let cls="";
-    if(days!==null){
-      if(days<0) cls="expired";
-      else if(days<=14) cls="warn";
-    }
-    const value = remaining(days);
-    return `<div class="meta-entry ${cls}"><div class="meta-label">${label}</div><div class="meta-value">${value}</div></div>`;
+function renderHouse(h) {
+  const d   = houseData[h.id] || {};
+  const fir = daysSince(d.fireAlarmDate);
+  const inv = d.inventory || [];
+  const assignedBikes = BIKES.filter(b => (bikeData[b.id]||{}).status === h.en);
+
+  function maintItem(cls, label, date, tapAttr) {
+    const color = cls==='red'?'#e53935': cls==='warn'?'#ff9800': '#222';
+    return `<div class="maint-item ${cls} tappable" ${tapAttr}>
+      <div class="maint-item-label">${label}</div>
+      <div class="maint-item-value" style="color:${color}">${sinceStr(date)}</div>
+    </div>`;
   }
 
-  const statusLabel =
-    d.status==="Free"?T[lang].available:
-    d.status==="Unavailable"?T[lang].unavailable:
-    T[lang].houses[d.status]||d.status;
+  const airItems = Array.from({length: h.aircons}, (_, i) => {
+    const n        = i + 1;
+    const dateKey  = `airconDate_${n}`;
+    const nameKey  = `airconName_${n}`;
+    const date     = d[dateKey] || null;
+    const cls      = maintCls(daysSince(date), 150, 180);
+    const defName  = h.aircons > 1 ? `Aircon ${n}` : 'Aircon';
+    const label    = d[nameKey] || defName;
+    const tap      = isAdmin ? `onclick="editHouseItem('${h.id}','${dateKey}','${nameKey}','${defName}','${date||''}','${escHtml(d[nameKey]||'')}')"` : '';
+    return maintItem(cls, label, date, tap);
+  }).join('');
+
+  const firCls     = maintCls(fir, 330, 365);
+  const firDefName = 'Fire Alarm';
+  const firLabel   = d.fireAlarmName || firDefName;
+  const firTap     = isAdmin ? `onclick="editHouseItem('${h.id}','fireAlarmDate','fireAlarmName','${firDefName}','${d.fireAlarmDate||''}','${escHtml(d.fireAlarmName||'')}')"` : '';
+
+  const bikeRows = assignedBikes.map(b => `
+    <div class="maint-item tappable" style="border-color:${b.color}" onclick="showStatusModal(${b.id})">
+      <div class="maint-item-label">Motorcycle</div>
+      <div class="maint-item-value" style="color:${b.color}">${b.name}</div>
+    </div>`).join('');
 
   return `
-  <div class="card ${d.status==='Free'?'free':d.status==='Unavailable'?'unavailable':'assigned'}">
-    <div class="card-header">
-      <div class="name">${b.name}</div>
-      <div class="plate-right">${b.plate}</div>
-    </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:2px">${h.en}</div>
 
-    <div class="row">
-      <img src="${b.img}" class="bike" onerror="this.style.display='none'">
-      <div class="info">
-        ${editMode?`
-          <div class="meta-edit">
-            <div>${T[lang].tax}: <input class="date" value="${d.taxExpiry||""}"
-              onchange="saveExpiry(${b.id},'taxExpiry',this.value)"></div>
-            <div>${T[lang].insurance}: <input class="date" value="${d.insuranceExpiry||""}"
-              onchange="saveExpiry(${b.id},'insuranceExpiry',this.value)"></div>
-          </div>
-        `:`
-          <div class="meta">
-            ${line(T[lang].tax,taxDays)}
-            ${line(T[lang].insurance,insDays)}
-          </div>
-        `}
-      </div>
-    </div>
+    ${bikeRows}
 
-    <div class="status-btn" onclick="toggleStatus(${b.id})">${statusLabel}</div>
-
-    ${openStatusMenu===b.id?`
-      <div class="status-menu">
-        <div onclick="setStatus(${b.id},'Free')">${T[lang].available}</div>
-        ${Object.keys(T[lang].houses).map(h=>`
-          <div onclick="setStatus(${b.id},'${h}')">${T[lang].houses[h]}</div>
-        `).join("")}
-        <div onclick="setStatus(${b.id},'Unavailable')">${T[lang].unavailable}</div>
-      </div>`:""}
-
-    <div class="updated">
-      ${d.updatedAt?`${timeAgo(d.updatedAt)} ${T[lang].by} ${d.updatedBy||""}`:""}
+    ${airItems}
+    ${maintItem(firCls, firLabel, d.fireAlarmDate||null, firTap)}
+    <div class="maint-item tappable" onclick="showInvModal('${h.id}')">
+      <div class="maint-item-label">Inventory</div>
     </div>
   </div>`;
 }
 
-/* ================= FIRESTORE with CACHE UPDATE ================= */
-bikes.forEach(b=>{
-  db.collection("bikes").doc("bike"+b.id).onSnapshot(doc=>{
-    if(doc.exists){
-      const data=doc.data();
-      bikeData[b.id]={...bikeData[b.id],...data,updatedAt:data.updatedAt?.toMillis?.()};
-      
-      // Save to cache for next reload
-      localStorage.setItem("bikeDataCache", JSON.stringify(bikeData));
-      
+/* ═══════════════════════════════════════════
+   RENDER — BIKES
+═══════════════════════════════════════════ */
+function renderBikes() {
+  document.getElementById('bikes').innerHTML = BIKES.map(renderBike).join('');
+}
+
+function renderBike(b) {
+  const d = bikeData[b.id] || { status: 'Free' };
+  const taxDays = daysLeft(d.taxExpiry);
+  const insDays = daysLeft(d.insuranceExpiry);
+  const svcList = d.serviceHistory || [];
+  const lastSvc = svcList.length ? svcList[svcList.length-1] : null;
+  const svcDays = lastSvc ? daysSince(lastSvc.date) : null;
+  const lastSvcMileage = lastSvc?.mileage ? ` (${escHtml(lastSvc.mileage)} km)` : '';
+
+  const taxCls = taxDays===null?'':taxDays<0?'red':taxDays<=14?'warn':'';
+  const insCls = insDays===null?'':insDays<0?'red':insDays<=14?'warn':'';
+  const svcCls = svcDays===null?'':svcDays>=120?'red':svcDays>=90?'warn':'';
+
+  const statusLabel   = d.status==='Free'?t('free'): d.status==='Unavailable'?t('unavail'): d.status;
+  const statusCardCls = d.status==='Free'?'free': d.status==='Unavailable'?'unavailable': 'assigned';
+  const statusCls     = d.status==='Free'?'ok': d.status==='Unavailable'?'': 'warn';
+
+  function bikeItem(cls, label, value, tap) {
+    const color = cls==='red'?'#e53935': cls==='warn'?'#ff9800': '#222';
+    return `<div class="maint-item ${cls}${tap?' tappable':''}" ${tap}>
+      <div class="maint-item-label">${label}</div>
+      <div class="maint-item-value" style="color:${color}">${value}</div>
+    </div>`;
+  }
+
+  return `
+  <div class="card ${statusCardCls}">
+    <div class="bike-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="bike-name">${b.name}</div>
+        <span class="bike-dot" style="background:${b.color}"></span>
+      </div>
+      <div class="plate">${b.plate}</div>
+    </div>
+
+    ${bikeItem(statusCls, 'Assignment', statusLabel, `onclick="showStatusModal(${b.id})"`)}
+    ${bikeItem(taxCls, t('tax'), remaining(taxDays), isAdmin?`onclick="editBikeDate(${b.id},'taxExpiry','Tax Expiry','${d.taxExpiry||''}')"`:'') }
+    ${bikeItem(insCls, t('ins'), remaining(insDays), isAdmin?`onclick="editBikeDate(${b.id},'insuranceExpiry','Insurance Expiry','${d.insuranceExpiry||''}')"`:'') }
+    ${bikeItem(svcCls, t('svc'), `${lastSvc ? sinceStr(lastSvc.date) : t('never')}${lastSvc ? ` - ${escHtml(lastSvc.note)}${lastSvcMileage}` : ''}`, isAdmin?`onclick="showServiceModal(${b.id})"`:'')}
+
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER ALL
+═══════════════════════════════════════════ */
+function renderAll() {
+  renderHouses();
+  renderBikes();
+  if (_openInvModal) _renderInvModal(_openInvModal);
+  if (_openSvcModal) _renderSvcModal(_openSvcModal);
+}
+
+/* ═══════════════════════════════════════════
+   FIRESTORE SUBSCRIPTIONS
+═══════════════════════════════════════════ */
+BIKES.forEach(b => {
+  db.collection('bikes').doc('bike'+b.id).onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      bikeData[b.id] = { ...bikeData[b.id], ...data, updatedAt: data.updatedAt?.toMillis?.() };
+      localStorage.setItem('bikeCache', JSON.stringify(bikeData));
       renderAll();
     }
   });
 });
 
-/* ================= AUTH with CACHE (optimistic render) ================= */
-function getCachedUser(){
-  try { return JSON.parse(localStorage.getItem("authCache")); }
-  catch { return null; }
-}
-
-const avatar = document.getElementById("avatar");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const editBtn = document.getElementById("editBtn");
-
-// Optimistic render from cache (no flash!)
-const cachedUser = getCachedUser();
-if(cachedUser){
-  avatar.src = cachedUser.photoURL || "";
-  avatar.style.display = cachedUser.photoURL ? "block" : "none";
-  loginBtn.style.display = "none";
-  logoutBtn.style.display = "inline-block";
-  editBtn.style.display = cachedUser.uid === ADMIN_UID ? "inline-block" : "none";
-} else {
-  avatar.style.display = "none";
-  loginBtn.style.display = "inline-block";
-  logoutBtn.style.display = "none";
-  editBtn.style.display = "none";
-}
-
-// Authoritative sync from Firebase
-auth.onAuthStateChanged(user=>{
-  if(user){
-    localStorage.setItem("authCache", JSON.stringify({
-      uid: user.uid,
-      photoURL: user.photoURL,
-      displayName: user.displayName
-    }));
-    avatar.src=user.photoURL||"";
-    avatar.style.display=user.photoURL?"block":"none";
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
-    editBtn.style.display=user.uid===ADMIN_UID?"inline-block":"none";
-  } else {
-    localStorage.removeItem("authCache");
-    avatar.style.display="none";
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-    editBtn.style.display="none";
-    editMode=false;
-  }
-  updateHeader();
+HOUSES.forEach(h => {
+  db.collection('houses').doc(h.id).onSnapshot(doc => {
+    houseData[h.id] = doc.exists ? doc.data() : {};
+    localStorage.setItem('houseCache', JSON.stringify(houseData));
+    renderAll();
+  });
 });
 
-/* ================= ACTIONS ================= */
-function signIn(){ 
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); 
-}
-function signOut(){ 
-  auth.signOut(); 
-}
-function toggleEdit(){ 
-  editMode=!editMode; 
-  editBtn.classList.toggle("edit-on",editMode); 
-  renderAll(); 
-}
-function toggleLang(){ 
-  lang=lang==="en"?"th":"en"; 
-  localStorage.setItem("lang",lang); 
-  updateHeader(); 
-  renderAll(); 
-}
-function updateHeader(){ 
-  document.getElementById("langLabel").innerText=lang==="en"?"ไทย":"English"; 
-  const langFlag = document.getElementById("langFlag");
-  // embedded SVG flags (small, widely supported)
-  const thaiSvg = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14"><rect width="20" height="14" fill="#d7141a"/><rect y="2" width="20" height="2" fill="#fff"/><rect y="4" width="20" height="6" fill="#0a2aa0"/><rect y="10" width="20" height="2" fill="#fff"/><rect y="12" width="20" height="2" fill="#d7141a"/></svg>');
-  const gbSvg = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><polygon points="0,0 3,0 20,11 20,14 17,14 0,3" fill="#fff"/><polygon points="0,14 3,14 20,3 20,0 17,0 0,11" fill="#fff"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#c8102e"/><rect y="6" width="20" height="2" fill="#c8102e"/></svg>');
-  langFlag.src = (lang==="en") ? thaiSvg : gbSvg;
-  langFlag.alt = (lang==="en") ? 'Thai' : 'English';
-  loginBtn.innerText=T[lang].login; 
-  logoutBtn.innerText=T[lang].logout; 
-}
-function toggleStatus(id){ 
-  openStatusMenu=openStatusMenu===id?null:id; 
-  renderAll(); 
+/* ═══════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════ */
+const avatarEl  = document.getElementById('avatar');
+const loginBtn  = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Optimistic render from cache
+try {
+  const cu = JSON.parse(localStorage.getItem('authCache'));
+  if (cu) {
+    if (cu.photoURL) { avatarEl.src=cu.photoURL; avatarEl.style.display='block'; }
+    loginBtn.style.display  = 'none';
+    logoutBtn.style.display = 'inline-block';
+    isAdmin = cu.uid === ADMIN_UID;
+  }
+} catch {}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    localStorage.setItem('authCache', JSON.stringify({ uid:user.uid, photoURL:user.photoURL, displayName:user.displayName }));
+    if (user.photoURL) { avatarEl.src=user.photoURL; avatarEl.style.display='block'; } else { avatarEl.style.display='none'; }
+    loginBtn.style.display  = 'none';
+    logoutBtn.style.display = 'inline-block';
+    isAdmin = user.uid === ADMIN_UID;
+  } else {
+    localStorage.removeItem('authCache');
+    avatarEl.style.display  = 'none';
+    loginBtn.style.display  = 'inline-block';
+    logoutBtn.style.display = 'none';
+    isAdmin = false;
+  }
+  renderAll();
+});
+
+function signIn()  { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+function signOut() { auth.signOut(); }
+
+/* ═══════════════════════════════════════════
+   BIKE — STATUS
+═══════════════════════════════════════════ */
+function showStatusModal(bikeId) {
+  const b = BIKES.find(b => b.id === bikeId);
+  const current = (bikeData[bikeId] || {}).status || 'Free';
+  const options = [
+    { val: 'Free',        label: t('free') },
+    ...HOUSES.map(h => ({ val: h.en, label: h.en })),
+    { val: 'Unavailable', label: t('unavail') }
+  ];
+  _showModal(`
+    <div class="modal-title">${b.name} — Assignment</div>
+    ${options.map(o => `
+      <div class="modal-option${current===o.val?' selected':''}" onclick="setStatus(${bikeId},'${o.val}');closeModal()">
+        ${o.label}
+      </div>`).join('')}
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+    </div>`);
 }
 
-function setStatus(id,val){
-  if(!auth.currentUser){signIn();return;}
-  openStatusMenu=null;
-  
-  // Use transaction to prevent race conditions
-  const docRef = db.collection("bikes").doc("bike"+id);
-  db.runTransaction(transaction => {
-    return transaction.get(docRef).then(doc => {
-      transaction.update(docRef, {
-        status:val,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy:auth.currentUser.displayName
-      });
-    });
-  }).catch(err => {
-    console.error("Failed to update status:", err);
+function setStatus(id, val) {
+  if (!auth.currentUser) { signIn(); return; }
+  openMenu = null;
+  db.collection('bikes').doc('bike'+id).update({
+    status: val,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: auth.currentUser.displayName
   });
 }
 
-function saveExpiry(id,field,val){
-  if(!editMode||!/^\d{2}\/\d{2}\/\d{2}$/.test(val))return;
-  db.collection("bikes").doc("bike"+id).update({[field]:val});
+/* ═══════════════════════════════════════════
+   BIKE — SERVICE HISTORY
+═══════════════════════════════════════════ */
+function _delSvcEntry(bikeId, entryId) {
+  const prev = bikeData[bikeId]?.serviceHistory || [];
+  const next = prev.filter(s => s.id !== entryId);
+  if (_editingSvcEntryId === entryId) _editingSvcEntryId = null;
+  _saveBikeServiceHistory(bikeId, next);
 }
 
-/* ================= INIT ================= */
-updateHeader();
-renderAll(); // Render immediately with cached data
-</script>
+/* ═══════════════════════════════════════════
+   HOUSE — BIKE ASSIGNMENT MODAL
+═══════════════════════════════════════════ */
+function showHouseBikeModal(houseId) {
+  const h = HOUSES.find(h => h.id === houseId);
+  const options = BIKES.map(b => {
+    const status = (bikeData[b.id] || {}).status || 'Free';
+    const sub    = status === 'Free' ? 'Available' : status === 'Unavailable' ? 'Unavailable' : status;
+    return `<div class="modal-option" onclick="showStatusModal(${b.id})">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${b.color};margin-right:8px;vertical-align:middle"></span>
+      ${b.name}
+      <span style="font-size:11px;color:#999;font-weight:400;margin-left:4px">— ${sub}</span>
+    </div>`;
+  }).join('');
 
+  _showModal(`
+    <div class="modal-title">${h.en} — Motorcycle</div>
+    ${options}
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+/* ═══════════════════════════════════════════
+   HOUSE — INVENTORY MODAL
+═══════════════════════════════════════════ */
+function showInvModal(houseId) {
+  _openInvModal = houseId;
+  _editingInvItemId = null;
+  _renderInvModal(houseId);
+}
+
+function _renderInvModal(houseId) {
+  const h   = HOUSES.find(h => h.id === houseId);
+  const inv = houseData[houseId]?.inventory || [];
+  const editingItem = inv.find(item => item.id === _editingInvItemId) || null;
+  const el  = document.getElementById('modal');
+  el.style.display = 'flex';
+  el.innerHTML = `<div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">${h.en} - Inventory</div>
+    <div id="inv-modal-list" style="margin-bottom:${isAdmin?'10px':'0'}">
+      ${inv.length===0
+        ? '<div style="font-size:13px;color:#bbb;padding:6px 0">No items yet</div>'
+        : inv.map(item => `
+          <div class="inv-item">
+            <span ${isAdmin ? `class="inv-name entry-btn" style="text-transform:none;font-size:14px;padding:0" onclick="_editInvItem('${houseId}','${item.id}')"` : 'class="inv-name"'}>${escHtml(item.name)}</span>
+            ${isAdmin ? `<span class="del-btn" onclick="_delInvItem('${houseId}','${item.id}')">✕</span>` : ''}
+          </div>`).join('')}
+    </div>
+    ${isAdmin ? `
+      <div style="display:flex;gap:8px">
+        <input id="minv-new" class="modal-input" type="text" value="${escHtml(editingItem?.name || '')}" placeholder="Add item..." style="margin-bottom:0;flex:1"
+          onkeydown="if(event.key==='Enter') _saveInvItem('${houseId}')">
+        <button onclick="_saveInvItem('${houseId}')" style="padding:10px 16px;background:#222;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700">${editingItem ? 'Save' : '+'}</button>
+      </div>` : ''}
+    <div class="modal-btns" style="margin-top:12px">
+      ${isAdmin && editingItem ? `<button class="cancel-btn" onclick="_cancelInvEdit('${houseId}')">Cancel Edit</button>` : ''}
+      <button class="cancel-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>`;
+}
+
+function _saveHouseInventory(houseId, next) {
+  houseData[houseId] = { ...(houseData[houseId] || {}), inventory: next };
+  localStorage.setItem('houseCache', JSON.stringify(houseData));
+  _renderInvModal(houseId);
+  db.collection('houses').doc(houseId).set(
+    { inventory: next },
+    { merge: true }
+  );
+}
+
+function _editInvItem(houseId, itemId) {
+  _editingInvItemId = itemId;
+  _renderInvModal(houseId);
+}
+
+function _cancelInvEdit(houseId) {
+  _editingInvItemId = null;
+  _renderInvModal(houseId);
+}
+
+function _saveInvItem(houseId) {
+  const input = document.getElementById('minv-new');
+  const name  = input?.value?.trim();
+  if (!name) return;
+  const prev = houseData[houseId]?.inventory || [];
+  const next = _editingInvItemId
+    ? prev.map(item => item.id === _editingInvItemId ? { ...item, name } : item)
+    : [...prev, { id: uid(), name }];
+  _editingInvItemId = null;
+  _saveHouseInventory(houseId, next);
+}
+
+function _delInvItem(houseId, itemId) {
+  const prev = houseData[houseId]?.inventory || [];
+  const next = prev.filter(i => i.id !== itemId);
+  if (_editingInvItemId === itemId) _editingInvItemId = null;
+  _saveHouseInventory(houseId, next);
+}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+  _pendingSave   = null;
+  _openInvModal  = null;
+  _openSvcModal = null;
+  _editingInvItemId = null;
+  _editingSvcEntryId = null;
+}
+
+function _showModal(html) {
+  const el = document.getElementById('modal');
+  el.style.display = 'flex';
+  el.innerHTML = `<div class="modal-box" onclick="event.stopPropagation()">${html}</div>`;
+}
+
+// Date modal (tax, insurance, aircon, fire alarm)
+function editBikeDate(id, field, title, currentVal) {
+  _pendingSave = () => {
+    const raw = document.getElementById('mdate')?.value;
+    const val = fromInputDate(raw);
+    if (!val) { alert('Please select a date'); return; }
+    db.collection('bikes').doc('bike'+id).update({ [field]: val });
+    closeModal();
+  };
+  _showModal(`
+    <div class="modal-title">${title}</div>
+    <input id="mdate" class="modal-input" type="date" value="${toInputDate(currentVal)}">
+    <div class="modal-btns">
+      <button class="save-btn" onclick="_pendingSave()">Save</button>
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+function editHouseItem(houseId, dateField, nameField, defaultName, currentDate, currentName) {
+  _pendingSave = () => {
+    const raw     = document.getElementById('mdate')?.value;
+    const val     = fromInputDate(raw);
+    const nameVal = document.getElementById('mname')?.value?.trim() || defaultName;
+    const update  = { [nameField]: nameVal };
+    if (val) update[dateField] = val;
+    // optimistic local update so card reflects change immediately
+    houseData[houseId] = { ...(houseData[houseId] || {}), ...update };
+    localStorage.setItem('houseCache', JSON.stringify(houseData));
+    renderAll();
+    db.collection('houses').doc(houseId).set(update, { merge: true });
+    closeModal();
+  };
+  _showModal(`
+    <div class="modal-title">${currentName || defaultName}</div>
+    <div class="maint-item-label" style="margin-bottom:4px">Name</div>
+    <input id="mname" class="modal-input" type="text" value="${escHtml(currentName || defaultName)}" placeholder="${defaultName}">
+    <div class="maint-item-label" style="margin-bottom:4px;margin-top:8px">Last serviced</div>
+    <input id="mdate" class="modal-input" type="date" value="${toInputDate(currentDate)}">
+    <div class="modal-btns">
+      <button class="save-btn" onclick="_pendingSave()">Save</button>
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+// Service log modal
+function showServiceModal(bikeId) {
+  _openSvcModal = bikeId;
+  _editingSvcEntryId = null;
+  _renderSvcModal(bikeId);
+}
+
+function _renderSvcModal(bikeId) {
+  const b = BIKES.find(b => b.id === bikeId);
+  const svcList = bikeData[bikeId]?.serviceHistory || [];
+  const editingEntry = svcList.find(s => s.id === _editingSvcEntryId) || null;
+  const historyHtml = svcList.length === 0
+    ? `<div style="font-size:12px;color:#bbb;padding:4px 0">${t('noSvc')}</div>`
+    : [...svcList].reverse().map(s => `
+        <div class="svc-entry">
+          <span ${isAdmin ? `class="entry-btn" style="flex:1;text-transform:none;font-size:12px;padding:0" onclick="_editSvcEntry(${bikeId},'${s.id}')"` : 'class="svc-note"'}>${escHtml(s.note)}${s.mileage ? ` (${escHtml(s.mileage)} km)` : ''}</span>
+          <span class="svc-date">${s.date}</span>
+          ${isAdmin ? `<span class="del-btn" onclick="_delSvcEntry(${bikeId},'${s.id}')">✕</span>` : ''}
+        </div>`).join('');
+
+  const el = document.getElementById('modal');
+  el.style.display = 'flex';
+  el.innerHTML = `<div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">${b.name} - Service History</div>
+    <div class="svc-list" style="margin-bottom:${isAdmin?'12px':'0'};max-height:220px;overflow-y:auto">${historyHtml}</div>
+    ${isAdmin ? `
+      <input id="msdate" class="modal-input" type="date" value="${toInputDate(editingEntry?.date || todayStr())}">
+      <input id="msmileage" class="modal-input" type="number" inputmode="numeric" min="0" step="1" value="${escHtml(editingEntry?.mileage || '')}" placeholder="Mileage (km)">
+      <input id="msnote" class="modal-input" type="text" value="${escHtml(editingEntry?.note || '')}" placeholder="e.g. Oil change, tyre check...">
+      <div class="modal-btns">
+        <button class="save-btn" onclick="_saveSvcEntry(${bikeId})">${editingEntry ? 'Save Changes' : 'Save'}</button>
+        <button class="cancel-btn" onclick="${editingEntry ? `_cancelSvcEdit(${bikeId})` : `closeModal()`}">${editingEntry ? 'Cancel Edit' : 'Cancel'}</button>
+      </div>` : `
+      <div class="modal-btns"><button class="cancel-btn" onclick="closeModal()">Close</button></div>`}
+  </div>`;
+}
+
+function _saveBikeServiceHistory(bikeId, next) {
+  bikeData[bikeId] = { ...(bikeData[bikeId] || {}), serviceHistory: next };
+  localStorage.setItem('bikeCache', JSON.stringify(bikeData));
+  _renderSvcModal(bikeId);
+  db.collection('bikes').doc('bike'+bikeId).update({
+    serviceHistory: next
+  });
+}
+
+function _editSvcEntry(bikeId, entryId) {
+  _editingSvcEntryId = entryId;
+  _renderSvcModal(bikeId);
+}
+
+function _cancelSvcEdit(bikeId) {
+  _editingSvcEntryId = null;
+  _renderSvcModal(bikeId);
+}
+
+function _saveSvcEntry(bikeId) {
+  const date = fromInputDate(document.getElementById('msdate')?.value);
+  const mileageRaw = document.getElementById('msmileage')?.value?.trim() || '';
+  const note = document.getElementById('msnote')?.value?.trim();
+  if (!date) { alert('Please select a date'); return; }
+  if (!note) { alert('Add a note'); return; }
+  const prev = bikeData[bikeId]?.serviceHistory || [];
+  const next = _editingSvcEntryId
+    ? prev.map(s => s.id === _editingSvcEntryId ? { ...s, date, mileage: mileageRaw, note } : s)
+    : [...prev, { id: uid(), date, mileage: mileageRaw, note }];
+  _editingSvcEntryId = null;
+  _saveBikeServiceHistory(bikeId, next);
+}
+
+
+/* ═══════════════════════════════════════════
+   SEED — historical service records (run once from console)
+═══════════════════════════════════════════ */
+async function seedServiceHistory() {
+  if (!auth.currentUser) { console.error('Not logged in. Sign in first.'); return; }
+  const historical = {
+    'bike1': [
+      { id: 'hist_1_1', date: '27/05/23', mileage: '12900', note: 'Oil, Gear Oil' },
+      { id: 'hist_1_2', date: '26/11/23', mileage: '14900', note: 'Oil, Gear Oil' },
+      { id: 'hist_1_3', date: '05/03/24', mileage: '17870', note: 'Oil, Gear Oil' },
+      { id: 'hist_1_4', date: '25/09/24', mileage: '20272', note: 'Oil, Gear Oil' },
+      { id: 'hist_1_5', date: '15/02/25', mileage: '23724', note: 'Oil, Gear Oil' },
+      { id: 'hist_1_6', date: '15/11/25', mileage: '', note: 'Oil, Gear Oil' }
+    ],
+    'bike2': [
+      { id: 'hist_2_1', date: '15/12/23', mileage: '', note: 'Oil, Gear Oil' },
+      { id: 'hist_2_2', date: '18/09/24', mileage: '', note: 'Oil, Gear Oil' },
+      { id: 'hist_2_3', date: '14/01/25', mileage: '', note: 'Oil, Gear Oil' },
+      { id: 'hist_2_4', date: '15/11/25', mileage: '', note: 'Oil, Gear Oil' }
+    ],
+    'bike3': [
+      { id: 'hist_3_1', date: '15/11/25', mileage: '', note: 'Oil, Gear Oil' }
+    ]
+  };
+  for (const [docId, records] of Object.entries(historical)) {
+    try {
+      const doc = await db.collection('bikes').doc(docId).get();
+      console.log(docId + ': doc exists =', doc.exists);
+      const existing = doc.exists ? (doc.data().serviceHistory || []) : [];
+      console.log(docId + ': existing records =', existing.length);
+      const existingIds = new Set(existing.map(s => s.id));
+      const toAdd = records.filter(r => !existingIds.has(r.id));
+      console.log(docId + ': records to add =', toAdd.length);
+      if (toAdd.length === 0) { console.log(docId + ': nothing to add'); continue; }
+      const merged = [...existing, ...toAdd].sort((a, b) => {
+        const pd = s => { const [d,m,y]=s.split('/'); return new Date(2000+Number(y),m-1,d); };
+        return pd(a.date) - pd(b.date);
+      });
+      await db.collection('bikes').doc(docId).set({ serviceHistory: merged }, { merge: true });
+      console.log(docId + ': done ✓');
+    } catch(e) {
+      console.error(docId + ': FAILED —', e.message);
+    }
+  }
+  console.log('All done. Refresh the page.');
+}
+
+async function seedAirconDates() {
+  if (!auth.currentUser) { console.error('Not logged in.'); return; }
+  const updates = {
+    'baan-mai':     { airconDate_1: '07/04/26', airconDate_2: '07/04/26', airconDate_3: '07/04/26' },
+    'baan-nam-lom': { airconDate_1: '07/04/26' },
+    'baan-mai-pai': { airconDate_1: '07/04/26' }
+  };
+  for (const [docId, fields] of Object.entries(updates)) {
+    try {
+      await db.collection('houses').doc(docId).set(fields, { merge: true });
+      console.log(docId + ': done ✓');
+    } catch(e) {
+      console.error(docId + ': FAILED —', e.message);
+    }
+  }
+  console.log('All done. Refresh the page.');
+}
+
+/* ═══════════════════════════════════════════
+   SECURITY — prevent XSS in user-entered text
+═══════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+renderAll();
+</script>
 </body>
 </html>
-
-
