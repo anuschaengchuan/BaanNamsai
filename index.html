@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Baan Nam Sai</title>
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
+<title>Baan Namsai</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="Logo.png">
+<link rel="apple-touch-icon" href="Logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -140,6 +141,15 @@ body {
 
 .updated { font-size: 11px; color: #aaa; margin-top: 5px; }
 
+/* ── Todo ── */
+.todo-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.todo-item:last-of-type { border-bottom: none; }
+.todo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.todo-text { flex: 1; }
+
 </style>
 </head>
 
@@ -155,6 +165,8 @@ body {
     <button id="logoutBtn" class="btn" style="display:none" onclick="signOut()">Logout</button>
   </div>
 </div>
+
+<div id="todos-section"></div>
 
 <div class="section-title">Houses</div>
 <div id="houses"></div>
@@ -188,10 +200,10 @@ db.enablePersistence().catch(() => {});
    STATIC DATA
 ═══════════════════════════════════════════ */
 const HOUSES = [
-  { id: "baan-mai",     en: "Baan Mai",      aircons: 3 },
+  { id: "baan-mai",     en: "Baan Mai",      aircons: 3, locations: ["Living Room","Bedroom","Small Bedroom"] },
   { id: "baan-nam-lom", en: "Baan Nam Lom",  aircons: 1 },
   { id: "baan-mai-pai", en: "Baan Mai Pai",  aircons: 1 },
-  { id: "baan-makham",  en: "Baan Makham",   aircons: 2 }
+  { id: "baan-makham",  en: "Baan Makham",   aircons: 2, locations: ["Living Room","Bedroom"] }
 ];
 
 const BIKES = [
@@ -212,8 +224,10 @@ let _editingSvcEntryId = null;
 
 let houseData = {};
 let bikeData  = {};
-try { houseData = JSON.parse(localStorage.getItem("houseCache") || "{}"); } catch {}
-try { bikeData  = JSON.parse(localStorage.getItem("bikeCache")  || "{}"); } catch {}
+let todosData = [];
+try { houseData  = JSON.parse(localStorage.getItem("houseCache")  || "{}"); } catch {}
+try { bikeData   = JSON.parse(localStorage.getItem("bikeCache")   || "{}"); } catch {}
+try { todosData  = JSON.parse(localStorage.getItem("todosCache")  || "[]"); } catch {}
 
 /* ═══════════════════════════════════════════
    STRINGS
@@ -314,16 +328,16 @@ function renderHouse(h) {
     const dateKey  = `airconDate_${n}`;
     const nameKey  = `airconName_${n}`;
     const date     = d[dateKey] || null;
-    const cls      = maintCls(daysSince(date), 150, 180);
+    const cls      = maintCls(daysSince(date), 365, 365);
     const defName  = h.aircons > 1 ? `Aircon ${n}` : 'Aircon';
-    const label    = d[nameKey] || defName;
+    const label    = '❄️' + (d[nameKey] || defName);
     const tap      = isAdmin ? `onclick="editHouseItem('${h.id}','${dateKey}','${nameKey}','${defName}','${date||''}','${escHtml(d[nameKey]||'')}')"` : '';
     return maintItem(cls, label, date, tap);
   }).join('');
 
-  const firCls     = maintCls(fir, 330, 365);
+  const firCls     = maintCls(fir, 365, 365);
   const firDefName = 'Fire Alarm';
-  const firLabel   = d.fireAlarmName || firDefName;
+  const firLabel   = '🚨' + (d.fireAlarmName || firDefName);
   const firTap     = isAdmin ? `onclick="editHouseItem('${h.id}','fireAlarmDate','fireAlarmName','${firDefName}','${d.fireAlarmDate||''}','${escHtml(d.fireAlarmName||'')}')"` : '';
 
   const bikeRows = assignedBikes.map(b => `
@@ -364,7 +378,7 @@ function renderBike(b) {
 
   const taxCls = taxDays===null?'':taxDays<0?'red':taxDays<=14?'warn':'';
   const insCls = insDays===null?'':insDays<0?'red':insDays<=14?'warn':'';
-  const svcCls = svcDays===null?'':svcDays>=120?'red':svcDays>=90?'warn':'';
+  const svcCls = svcDays===null?'':svcDays>=150?'red':'';
 
   const statusLabel   = d.status==='Free'?t('free'): d.status==='Unavailable'?t('unavail'): d.status;
   const statusCardCls = d.status==='Free'?'free': d.status==='Unavailable'?'unavailable': 'assigned';
@@ -400,6 +414,7 @@ function renderBike(b) {
    RENDER ALL
 ═══════════════════════════════════════════ */
 function renderAll() {
+  renderTodos();
   renderHouses();
   renderBikes();
   if (_openInvModal) _renderInvModal(_openInvModal);
@@ -409,6 +424,12 @@ function renderAll() {
 /* ═══════════════════════════════════════════
    FIRESTORE SUBSCRIPTIONS
 ═══════════════════════════════════════════ */
+db.collection('app').doc('todos').onSnapshot(doc => {
+  todosData = doc.exists ? (doc.data().items || []) : [];
+  localStorage.setItem('todosCache', JSON.stringify(todosData));
+  renderTodos();
+});
+
 BIKES.forEach(b => {
   db.collection('bikes').doc('bike'+b.id).onSnapshot(doc => {
     if (doc.exists) {
@@ -544,20 +565,43 @@ function _renderInvModal(houseId) {
   const h   = HOUSES.find(h => h.id === houseId);
   const inv = houseData[houseId]?.inventory || [];
   const editingItem = inv.find(item => item.id === _editingInvItemId) || null;
-  const el  = document.getElementById('modal');
+  const locations = h.locations || [];
+
+  function itemRow(item) {
+    return `<div class="inv-item">
+      <span ${isAdmin ? `class="inv-name entry-btn" style="text-transform:none;font-size:14px;padding:0" onclick="_editInvItem('${houseId}','${item.id}')"` : 'class="inv-name"'}>${escHtml(item.name)}</span>
+      ${isAdmin ? `<span class="del-btn" onclick="_delInvItem('${houseId}','${item.id}')">✕</span>` : ''}
+    </div>`;
+  }
+
+  let listHtml;
+  if (inv.length === 0) {
+    listHtml = '<div style="font-size:13px;color:#bbb;padding:6px 0">No items yet</div>';
+  } else if (locations.length === 0) {
+    listHtml = inv.map(itemRow).join('');
+  } else {
+    const locHeader = loc => `<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin:10px 0 3px">${escHtml(loc)}</div>`;
+    const groups = locations.map(loc => {
+      const items = inv.filter(i => i.location === loc);
+      return items.length ? locHeader(loc) + items.map(itemRow).join('') : '';
+    });
+    const unassigned = inv.filter(i => !i.location || !locations.includes(i.location));
+    if (unassigned.length) groups.push(locHeader('Other') + unassigned.map(itemRow).join(''));
+    listHtml = groups.join('');
+  }
+
+  const locSelect = locations.length > 0 ? `
+    <select id="minv-loc" class="modal-input">
+      ${locations.map(l => `<option value="${escHtml(l)}"${editingItem?.location===l?' selected':''}>${escHtml(l)}</option>`).join('')}
+    </select>` : '';
+
+  const el = document.getElementById('modal');
   el.style.display = 'flex';
   el.innerHTML = `<div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-title">${h.en} - Inventory</div>
-    <div id="inv-modal-list" style="margin-bottom:${isAdmin?'10px':'0'}">
-      ${inv.length===0
-        ? '<div style="font-size:13px;color:#bbb;padding:6px 0">No items yet</div>'
-        : inv.map(item => `
-          <div class="inv-item">
-            <span ${isAdmin ? `class="inv-name entry-btn" style="text-transform:none;font-size:14px;padding:0" onclick="_editInvItem('${houseId}','${item.id}')"` : 'class="inv-name"'}>${escHtml(item.name)}</span>
-            ${isAdmin ? `<span class="del-btn" onclick="_delInvItem('${houseId}','${item.id}')">✕</span>` : ''}
-          </div>`).join('')}
-    </div>
+    <div id="inv-modal-list" style="margin-bottom:${isAdmin?'10px':'0'};max-height:260px;overflow-y:auto">${listHtml}</div>
     ${isAdmin ? `
+      ${locSelect}
       <div style="display:flex;gap:8px">
         <input id="minv-new" class="modal-input" type="text" value="${escHtml(editingItem?.name || '')}" placeholder="Add item..." style="margin-bottom:0;flex:1"
           onkeydown="if(event.key==='Enter') _saveInvItem('${houseId}')">
@@ -594,10 +638,11 @@ function _saveInvItem(houseId) {
   const input = document.getElementById('minv-new');
   const name  = input?.value?.trim();
   if (!name) return;
+  const location = document.getElementById('minv-loc')?.value || '';
   const prev = houseData[houseId]?.inventory || [];
   const next = _editingInvItemId
-    ? prev.map(item => item.id === _editingInvItemId ? { ...item, name } : item)
-    : [...prev, { id: uid(), name }];
+    ? prev.map(item => item.id === _editingInvItemId ? { ...item, name, ...(location ? {location} : {}) } : item)
+    : [...prev, { id: uid(), name, ...(location ? {location} : {}) }];
   _editingInvItemId = null;
   _saveHouseInventory(houseId, next);
 }
@@ -743,6 +788,94 @@ function _saveSvcEntry(bikeId) {
 
 
 /* ═══════════════════════════════════════════
+   TODO SECTION
+═══════════════════════════════════════════ */
+function _autoTodos() {
+  const items = [];
+  BIKES.forEach(b => {
+    const d = bikeData[b.id] || {};
+    const svcList = d.serviceHistory || [];
+    const lastSvc = svcList.length ? svcList[svcList.length-1] : null;
+    const svcDays = lastSvc ? daysSince(lastSvc.date) : null;
+    if (svcDays !== null && svcDays >= 150)
+      items.push(`${b.name} (${b.plate}) — Service overdue`);
+    const taxDays = daysLeft(d.taxExpiry);
+    if (taxDays !== null && taxDays <= 14)
+      items.push(`${b.name} — Tax ${taxDays < 0 ? 'expired' : 'expires in '+taxDays+' days'}`);
+    const insDays = daysLeft(d.insuranceExpiry);
+    if (insDays !== null && insDays <= 14)
+      items.push(`${b.name} — Insurance ${insDays < 0 ? 'expired' : 'expires in '+insDays+' days'}`);
+  });
+  HOUSES.forEach(h => {
+    const d = houseData[h.id] || {};
+    for (let i = 1; i <= h.aircons; i++) {
+      const days = daysSince(d[`airconDate_${i}`]);
+      if (days !== null && days >= 365) {
+        const label = d[`airconName_${i}`] || (h.aircons > 1 ? `Aircon ${i}` : 'Aircon');
+        items.push(`❄️${h.en} ${label} — Service overdue`);
+      }
+    }
+    const firDays = daysSince(d.fireAlarmDate);
+    if (firDays !== null && firDays >= 365)
+      items.push(`🚨${h.en} Fire Alarm — Battery overdue`);
+  });
+  return items;
+}
+
+function renderTodos() {
+  const auto   = _autoTodos();
+  const el     = document.getElementById('todos-section');
+  const hasAny = auto.length || todosData.length || isAdmin;
+  if (!hasAny) { el.innerHTML = ''; return; }
+
+  const autoHtml = auto.map(text => `
+    <div class="todo-item">
+      <span class="todo-dot" style="background:#e53935"></span>
+      <span class="todo-text">${escHtml(text)}</span>
+    </div>`).join('');
+
+  const customHtml = todosData.map(item => `
+    <div class="todo-item">
+      <span class="todo-dot" style="background:#bbb"></span>
+      <span class="todo-text">${escHtml(item.text)}</span>
+      ${isAdmin ? `<span class="del-btn" onclick="_delTodo('${item.id}')">✕</span>` : ''}
+    </div>`).join('');
+
+  const addRow = isAdmin ? `
+    <div style="display:flex;gap:8px;margin-top:${auto.length||todosData.length?'10px':'0'}">
+      <input id="todo-input" class="modal-input" type="text" placeholder="Add note…"
+        style="margin-bottom:0;flex:1" onkeydown="if(event.key==='Enter')_addTodo()">
+      <button onclick="_addTodo()" style="padding:10px 16px;background:#222;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700">+</button>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="section-title">To Do</div>
+    <div class="card" style="padding:10px 12px">
+      ${customHtml}${auto.length ? `<div style="margin-top:${todosData.length?'10px':'0'}">${autoHtml}</div>` : ''}${addRow}
+    </div>`;
+}
+
+function _addTodo() {
+  const input = document.getElementById('todo-input');
+  const text  = input?.value?.trim();
+  if (!text) return;
+  const next = [...todosData, { id: uid(), text }];
+  todosData = next;
+  localStorage.setItem('todosCache', JSON.stringify(todosData));
+  renderTodos();
+  db.collection('app').doc('todos').set({ items: next });
+  if (input) input.value = '';
+}
+
+function _delTodo(id) {
+  const next = todosData.filter(t => t.id !== id);
+  todosData = next;
+  localStorage.setItem('todosCache', JSON.stringify(todosData));
+  renderTodos();
+  db.collection('app').doc('todos').set({ items: next });
+}
+
+/* ═══════════════════════════════════════════
    SEED — historical service records (run once from console)
 ═══════════════════════════════════════════ */
 async function seedServiceHistory() {
@@ -782,6 +915,50 @@ async function seedServiceHistory() {
       });
       await db.collection('bikes').doc(docId).set({ serviceHistory: merged }, { merge: true });
       console.log(docId + ': done ✓');
+    } catch(e) {
+      console.error(docId + ': FAILED —', e.message);
+    }
+  }
+  console.log('All done. Refresh the page.');
+}
+
+async function seedInventory() {
+  if (!auth.currentUser) { console.error('Not logged in.'); return; }
+  const data = {
+    'baan-mai': [
+      { id: 'inv_bm_1', name: '4x Pillow Jordrök (soft)',     location: 'Bedroom' },
+      { id: 'inv_bm_2', name: '1x Duvet 220*240 Sötvedel',    location: 'Bedroom' },
+      { id: 'inv_bm_3', name: '2x PVC Pillow',                location: 'Small Bedroom' },
+      { id: 'inv_bm_4', name: '2x Pillow Jordrök (low)',      location: 'Small Bedroom' },
+      { id: 'inv_bm_5', name: '2x Protector Ängsvide',        location: 'Small Bedroom' },
+      { id: 'inv_bm_6', name: '2x Duvet 150*200 Fjällbräcka', location: 'Small Bedroom' }
+    ],
+    'baan-mai-pai': [
+      { id: 'inv_bmp_1', name: '1x Duvet Hönsbär' },
+      { id: 'inv_bmp_2', name: '2x Pillow Jordrök (high)' },
+      { id: 'inv_bmp_3', name: '2x Pillow Skogsfräken (low)' }
+    ],
+    'baan-nam-lom': [
+      { id: 'inv_bnl_1', name: '1x Sötvedel Duvet 220*240' },
+      { id: 'inv_bnl_2', name: '2x Jordrök (firm)' },
+      { id: 'inv_bnl_3', name: '2x Guldpalm (soft)' }
+    ],
+    'baan-makham': [
+      { id: 'inv_bmk_1', name: '2x Pilspinnare down (soft)',  location: 'Bedroom' },
+      { id: 'inv_bmk_2', name: '2x Solstice Micro (mid)',     location: 'Bedroom' },
+      { id: 'inv_bmk_3', name: '1x Fjällarnika Duvet 220*240',location: 'Bedroom' },
+      { id: 'inv_bmk_4', name: '1x Protector Lazada',         location: 'Bedroom' }
+    ]
+  };
+  for (const [docId, newItems] of Object.entries(data)) {
+    try {
+      const doc = await db.collection('houses').doc(docId).get();
+      const existing = doc.exists ? (doc.data().inventory || []) : [];
+      const existingIds = new Set(existing.map(i => i.id));
+      const toAdd = newItems.filter(i => !existingIds.has(i.id));
+      if (toAdd.length === 0) { console.log(docId + ': nothing to add'); continue; }
+      await db.collection('houses').doc(docId).set({ inventory: [...existing, ...toAdd] }, { merge: true });
+      console.log(docId + ': added ' + toAdd.length + ' item(s) ✓');
     } catch(e) {
       console.error(docId + ': FAILED —', e.message);
     }
