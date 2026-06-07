@@ -152,7 +152,7 @@ body {
 .todo-text { flex: 1; }
 .todo-icon { font-size: 15px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; }
 .todo-item.custom { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.todo-item.dragging { opacity: .9; background: #f4f4f4; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.todo-item.dragging { background: #f4f4f4; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,.15); position: relative; z-index: 2; will-change: transform; }
 
 </style>
 </head>
@@ -902,6 +902,7 @@ function _autoTodos() {
 }
 
 function renderTodos() {
+  if (_dragEl) return;          // don't rebuild the list mid-drag
   const auto   = _autoTodos();
   const el     = document.getElementById('todos-section');
   const hasAny = auto.length || todosData.length || isAdmin;
@@ -955,41 +956,40 @@ function _delTodo(id) {
 }
 
 /* ── Long-press to reorder custom to-dos (admin only, touch + mouse) ── */
-const PRESS_MS = 450;      // hold time before an item is "picked up"
-const MOVE_TOL = 8;        // px of movement before the hold counts as a scroll
+const PRESS_MS = 350;      // hold time before an item is "picked up"
+const MOVE_TOL = 10;       // px of movement before the hold counts as a scroll
 let _dragEl    = null;     // the item currently being dragged
 let _pressRow  = null;     // row under an in-progress press (may not be dragging yet)
 let _pressTimer = null;
 let _pressXY   = null;
 let _pressPid  = null;
+let _startY    = 0;        // finger Y when the item was picked up
+let _lastY     = 0;        // latest finger Y
+let _raf       = 0;        // pending animation frame
 
 function _todoPressStart(e, row) {
   if (e.target.closest('.del-btn')) return;   // let the delete button work normally
   _pressRow = row;
   _pressPid = e.pointerId;
   _pressXY  = { x: e.clientX, y: e.clientY };
+  _lastY    = e.clientY;
   try { row.setPointerCapture?.(e.pointerId); } catch {}
   row.addEventListener('pointermove', _todoPointerMove);
   row.addEventListener('pointerup', _todoPointerUp);
   row.addEventListener('pointercancel', _todoPointerUp);
   _pressTimer = setTimeout(() => {
     _pressTimer = null;
-    _dragEl = row;
+    _dragEl  = row;
+    _startY  = _lastY;
     row.classList.add('dragging');
     if (navigator.vibrate) navigator.vibrate(12);   // subtle haptic on pickup
   }, PRESS_MS);
 }
 
 function _todoPointerMove(e) {
-  if (_dragEl) {                       // picked up → reorder live
-    const parent = _dragEl.parentElement;
-    const rows = [...parent.querySelectorAll('.todo-item.custom:not(.dragging)')];
-    const after = rows.find(r => {
-      const b = r.getBoundingClientRect();
-      return e.clientY < b.top + b.height / 2;
-    });
-    if (after) parent.insertBefore(_dragEl, after);
-    else if (rows.length) parent.insertBefore(_dragEl, rows[rows.length - 1].nextSibling);
+  _lastY = e.clientY;
+  if (_dragEl) {                                   // picked up → update on next frame
+    if (!_raf) _raf = requestAnimationFrame(_dragFrame);
     return;
   }
   // still waiting on the hold: meaningful movement means the user is scrolling
@@ -998,16 +998,45 @@ function _todoPointerMove(e) {
   }
 }
 
+function _dragFrame() {
+  _raf = 0;
+  if (!_dragEl) return;
+  const parent = _dragEl.parentElement;
+  // 1) make the picked-up item track the finger (transform = no layout cost)
+  _dragEl.style.transform = `translateY(${_lastY - _startY}px)`;
+  // 2) find the neighbour whose middle the finger has passed
+  const rows  = [...parent.querySelectorAll('.todo-item.custom:not(.dragging)')];
+  const ref   = rows.find(r => {
+    const b = r.getBoundingClientRect();
+    return _lastY < b.top + b.height / 2;
+  }) || null;
+  // 3) skip if it's already in the right slot (avoids needless reflow)
+  const next = _dragEl.nextElementSibling;
+  if (ref ? next === ref : !(next && next.classList.contains('custom'))) return;
+  // 4) move it, then re-anchor so the finger-tracking stays continuous
+  const before = _dragEl.offsetTop;
+  if (ref) parent.insertBefore(_dragEl, ref);
+  else { const last = rows[rows.length - 1]; if (last) parent.insertBefore(_dragEl, last.nextSibling); }
+  _startY += _dragEl.offsetTop - before;
+  _dragEl.style.transform = `translateY(${_lastY - _startY}px)`;
+}
+
 function _todoPointerUp() {
   const wasDragging = !!_dragEl;
+  if (wasDragging) {
+    if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
+    _dragFrame();          // apply the final drop position before reading the order
+  }
   _endPress();
   if (wasDragging) _commitTodoOrder();
 }
 
 function _endPress() {
   if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
+  if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
   const row = _pressRow;
   if (row) {
+    row.style.transform = '';
     row.classList.remove('dragging');
     try { row.releasePointerCapture?.(_pressPid); } catch {}
     row.removeEventListener('pointermove', _todoPointerMove);
