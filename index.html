@@ -471,7 +471,8 @@ BIKES.forEach(b => {
 
 HOUSES.forEach(h => {
   db.collection('houses').doc(h.id).onSnapshot(doc => {
-    houseData[h.id] = doc.exists ? doc.data() : {};
+    if (!doc.exists) return;          // don't clobber existing data with {}
+    houseData[h.id] = doc.data();
     localStorage.setItem('houseCache', JSON.stringify(houseData));
     renderAll();
   });
