@@ -151,6 +151,8 @@ body {
 .todo-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .todo-text { flex: 1; }
 .todo-icon { font-size: 15px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; }
+.todo-item.custom { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.todo-item.dragging { opacity: .9; background: #f4f4f4; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 
 </style>
 </head>
@@ -913,7 +915,7 @@ function renderTodos() {
     </div>`).join('');
 
   const customHtml = todosData.map(item => `
-    <div class="todo-item">
+    <div class="todo-item custom" data-todo-id="${item.id}"${isAdmin ? ` onpointerdown="_todoPressStart(event, this)"` : ''}>
       <span class="todo-text">${escHtml(item.text)}</span>
       ${isAdmin ? `<span class="del-btn" onclick="_delTodo('${item.id}')">✕</span>` : ''}
     </div>`).join('');
@@ -951,6 +953,83 @@ function _delTodo(id) {
   renderTodos();
   db.collection('app').doc('todos').set({ items: next });
 }
+
+/* ── Long-press to reorder custom to-dos (admin only, touch + mouse) ── */
+const PRESS_MS = 450;      // hold time before an item is "picked up"
+const MOVE_TOL = 8;        // px of movement before the hold counts as a scroll
+let _dragEl    = null;     // the item currently being dragged
+let _pressRow  = null;     // row under an in-progress press (may not be dragging yet)
+let _pressTimer = null;
+let _pressXY   = null;
+let _pressPid  = null;
+
+function _todoPressStart(e, row) {
+  if (e.target.closest('.del-btn')) return;   // let the delete button work normally
+  _pressRow = row;
+  _pressPid = e.pointerId;
+  _pressXY  = { x: e.clientX, y: e.clientY };
+  try { row.setPointerCapture?.(e.pointerId); } catch {}
+  row.addEventListener('pointermove', _todoPointerMove);
+  row.addEventListener('pointerup', _todoPointerUp);
+  row.addEventListener('pointercancel', _todoPointerUp);
+  _pressTimer = setTimeout(() => {
+    _pressTimer = null;
+    _dragEl = row;
+    row.classList.add('dragging');
+    if (navigator.vibrate) navigator.vibrate(12);   // subtle haptic on pickup
+  }, PRESS_MS);
+}
+
+function _todoPointerMove(e) {
+  if (_dragEl) {                       // picked up → reorder live
+    const parent = _dragEl.parentElement;
+    const rows = [...parent.querySelectorAll('.todo-item.custom:not(.dragging)')];
+    const after = rows.find(r => {
+      const b = r.getBoundingClientRect();
+      return e.clientY < b.top + b.height / 2;
+    });
+    if (after) parent.insertBefore(_dragEl, after);
+    else if (rows.length) parent.insertBefore(_dragEl, rows[rows.length - 1].nextSibling);
+    return;
+  }
+  // still waiting on the hold: meaningful movement means the user is scrolling
+  if (_pressXY && (Math.abs(e.clientX - _pressXY.x) > MOVE_TOL || Math.abs(e.clientY - _pressXY.y) > MOVE_TOL)) {
+    _endPress();
+  }
+}
+
+function _todoPointerUp() {
+  const wasDragging = !!_dragEl;
+  _endPress();
+  if (wasDragging) _commitTodoOrder();
+}
+
+function _endPress() {
+  if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
+  const row = _pressRow;
+  if (row) {
+    row.classList.remove('dragging');
+    try { row.releasePointerCapture?.(_pressPid); } catch {}
+    row.removeEventListener('pointermove', _todoPointerMove);
+    row.removeEventListener('pointerup', _todoPointerUp);
+    row.removeEventListener('pointercancel', _todoPointerUp);
+  }
+  _dragEl = null; _pressRow = null; _pressXY = null; _pressPid = null;
+}
+
+function _commitTodoOrder() {
+  const order = [...document.querySelectorAll('.todo-item.custom')].map(r => r.dataset.todoId);
+  const byId  = Object.fromEntries(todosData.map(t => [t.id, t]));
+  const next  = order.map(id => byId[id]).filter(Boolean);
+  if (next.length !== todosData.length) return; // safety: don't save a partial list
+  todosData = next;
+  localStorage.setItem('todosCache', JSON.stringify(todosData));
+  renderTodos();
+  db.collection('app').doc('todos').set({ items: next });
+}
+
+// Block page scrolling only while an item is actively being dragged.
+document.addEventListener('touchmove', e => { if (_dragEl) e.preventDefault(); }, { passive: false });
 
 /* ═══════════════════════════════════════════
    SEED — historical service records (run once from console)
